@@ -11,4 +11,14 @@ sealed interface DataErrors : Error {
         INVALID_KEY,
         INVALID_HASH
     }
+
+    enum class Local: Error {
+        SQL_ERROR,
+        UNKNOWN_ERROR
+    }
+
+    enum class UiErrors: DataErrors {
+        TOO_SMALL,
+        INVALID_VALUE
+    }
 }

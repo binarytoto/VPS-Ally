@@ -1,19 +1,13 @@
 package top.cuboid.vpsally.domain
 
+import top.cuboid.vpsally.data.local.SolusServer
+import top.cuboid.vpsally.data.Server
+
 interface SolusRepository {
-    suspend fun performAction(action: String = SolusRequestConstants.STATUS_FLAG): Result<Server, DataErrors.Network>
+    suspend fun performRemoteAction(action: String = SolusRequestConstants.STATUS_FLAG, server: SolusServer): Result<Server, DataErrors.Network>
+    suspend fun saveServer(server: SolusServer): Result<Boolean,DataErrors.Local>
+    suspend fun getServerDetailsLocally(server: SolusServer): SolusServer?
 }
 
-data class Server(
-    val host: String?,
-    val statusMsg: String?,
-    val ip: String?,
-    val serverStatus: String?,
-    val totalStorage: Long?,
-    val usedStorage: Long?,
-    val totalBw: Long?,
-    val usedBw: Long?,
-    var totalMem: Long?,
-    var usedMem: Long?
-)
+
 

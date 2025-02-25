@@ -1,25 +1,30 @@
 package top.cuboid.vpsally.data
 
+import android.database.sqlite.SQLiteException
 import io.ktor.client.call.body
 import io.ktor.http.HttpStatusCode
+import top.cuboid.vpsally.data.local.AppDB
+import top.cuboid.vpsally.data.local.SolusServer
 import top.cuboid.vpsally.domain.DataErrors
 import top.cuboid.vpsally.domain.Result
-import top.cuboid.vpsally.domain.Server
+import top.cuboid.vpsally.data.Server
 import top.cuboid.vpsally.domain.SolusRepository
 import top.cuboid.vpsally.domain.SolusResponseConstants
-import top.cuboid.vpsally.remote.SolusVMService
+import top.cuboid.vpsally.data.remote.SolusVMService
 
-class SolusRepositoryImpl : SolusRepository {
-    private val service = SolusVMService.create()
+class SolusRepositoryImpl(
+    private val service: SolusVMService,
+    private val db: AppDB
+): SolusRepository {
 
-    override suspend fun performAction(action: String): Result<Server, DataErrors.Network> {
+    override suspend fun performRemoteAction(action: String, server: SolusServer): Result<Server, DataErrors.Network> {
 
         try {
-            val response = service.connect(action)
+            val response = service.connect(action,server)
             val responseBody = response.body<String>()
             val requestStatus = response.status
 
-            // Gives 500 error code with mem flag if server is offline
+            // returns 500 error code with mem flag if server is offline
             if (requestStatus == HttpStatusCode.OK || requestStatus == HttpStatusCode.InternalServerError) {
                 val status =
                     """<${SolusResponseConstants.STATUS}>(.*?)</${SolusResponseConstants.STATUS}>""".toRegex()
@@ -55,6 +60,7 @@ class SolusRepositoryImpl : SolusRepository {
 
                     return Result.Success(
                         Server(
+                            id = server.sid,
                             host = hostName,
                             statusMsg = statusMsg,
                             ip = ipAddr,
@@ -91,6 +97,26 @@ class SolusRepositoryImpl : SolusRepository {
     private fun parseCSV(line: String): List<Long> {
         return line.split(",").map { it.trim().toLong() }
     }
+
+    override suspend fun getServerDetailsLocally(server: SolusServer): SolusServer? {
+       return db.solusServerDao().findByDetail(
+           server.key,
+           server.hash,
+           server.requestUrl)
+    }
+
+    override suspend fun saveServer(server: SolusServer): Result<Boolean, DataErrors.Local> {
+        return Result.Error(DataErrors.Local.SQL_ERROR)
+        try {
+            db.solusServerDao().addServer(server)
+            return Result.Success(true)
+        } catch (e: SQLiteException) {
+            return Result.Error(DataErrors.Local.SQL_ERROR)
+        } catch (e: Exception) {
+            return Result.Error(DataErrors.Local.UNKNOWN_ERROR)
+        }
+    }
+
 
 
 }
