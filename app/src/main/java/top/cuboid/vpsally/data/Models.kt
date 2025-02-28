@@ -1,9 +1,5 @@
 package top.cuboid.vpsally.data
 
-import android.os.Parcelable
-import kotlinx.parcelize.Parcelize
-
-@Parcelize
 data class Server(
     val id: Int,
     val host: String?,
@@ -16,5 +12,5 @@ data class Server(
     val usedBw: Long?,
     var totalMem: Long?,
     var usedMem: Long?
-) : Parcelable
+)
 

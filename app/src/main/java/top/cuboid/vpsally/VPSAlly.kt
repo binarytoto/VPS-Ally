@@ -1,6 +1,7 @@
-package top.cuboid.vpsally.di
+package top.cuboid.vpsally
 
 import android.app.Application
+import top.cuboid.vpsally.di.AppContainer
 
 class VPSAlly : Application() {
 

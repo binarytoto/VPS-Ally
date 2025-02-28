@@ -1,5 +1,6 @@
 package top.cuboid.vpsally.domain
 
+//TODO REFACTOR
 sealed interface DataErrors : Error {
     enum class Network : DataErrors {
         RESOURCE_REDIRECT,
@@ -12,13 +13,9 @@ sealed interface DataErrors : Error {
         INVALID_HASH
     }
 
-    enum class Local: Error {
+    enum class Local : DataErrors {
         SQL_ERROR,
         UNKNOWN_ERROR
     }
 
-    enum class UiErrors: DataErrors {
-        TOO_SMALL,
-        INVALID_VALUE
-    }
 }

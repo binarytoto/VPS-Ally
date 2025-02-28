@@ -27,4 +27,16 @@
     <string name="server_save_error">Couldn\'t save server</string>
     <string name="unknown_error">something went wrong</string>
     <string name="server_saved">server details saved!</string>
+    <string name="bandwidth">Bandwidth:</string>
+    <string name="storage">Storage:</string>
+    <string name="memory">Memory:</string>
+    <string name="sql_error">Could not save data!</string>
+    <string name="redirect_error">Endpoint redirected</string>
+    <string name="resource_not_found_error">Invalid URL</string>
+    <string name="server_error">Something went wrong on server</string>
+    <string name="bad_response_error">Bad response from server</string>
+    <string name="no_internet_error">Not connected to internet</string>
+    <string name="api_error">API error</string>
+    <string name="invalid_key_error">Invalid API key</string>
+    <string name="invalid_api_hash">Invalid API hash</string>
 </resources>

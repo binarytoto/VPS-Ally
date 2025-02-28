@@ -5,7 +5,7 @@ import androidx.room.PrimaryKey
 
 @Entity
 data class SolusServer(
-    @PrimaryKey//(autoGenerate = true)
+    @PrimaryKey(autoGenerate = true)
     var sid: Int = 0,
     val requestUrl: String,
     val key: String,

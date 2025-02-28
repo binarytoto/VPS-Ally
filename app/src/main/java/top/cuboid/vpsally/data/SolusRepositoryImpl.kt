@@ -5,22 +5,23 @@ import io.ktor.client.call.body
 import io.ktor.http.HttpStatusCode
 import top.cuboid.vpsally.data.local.AppDB
 import top.cuboid.vpsally.data.local.SolusServer
+import top.cuboid.vpsally.data.remote.SolusVMService
 import top.cuboid.vpsally.domain.DataErrors
 import top.cuboid.vpsally.domain.Result
-import top.cuboid.vpsally.data.Server
-import top.cuboid.vpsally.domain.SolusRepository
 import top.cuboid.vpsally.domain.SolusResponseConstants
-import top.cuboid.vpsally.data.remote.SolusVMService
 
 class SolusRepositoryImpl(
     private val service: SolusVMService,
     private val db: AppDB
-): SolusRepository {
+) : SolusRepository {
 
-    override suspend fun performRemoteAction(action: String, server: SolusServer): Result<Server, DataErrors.Network> {
+    override suspend fun performRemoteAction(
+        action: String,
+        server: SolusServer
+    ): Result<Server, DataErrors.Network> {
 
         try {
-            val response = service.connect(action,server)
+            val response = service.connect(action, server)
             val responseBody = response.body<String>()
             val requestStatus = response.status
 
@@ -99,14 +100,14 @@ class SolusRepositoryImpl(
     }
 
     override suspend fun getServerDetailsLocally(server: SolusServer): SolusServer? {
-       return db.solusServerDao().findByDetail(
-           server.key,
-           server.hash,
-           server.requestUrl)
+        return db.solusServerDao().findByDetail(
+            server.key,
+            server.hash,
+            server.requestUrl
+        )
     }
 
     override suspend fun saveServer(server: SolusServer): Result<Boolean, DataErrors.Local> {
-        return Result.Error(DataErrors.Local.SQL_ERROR)
         try {
             db.solusServerDao().addServer(server)
             return Result.Success(true)
@@ -116,7 +117,6 @@ class SolusRepositoryImpl(
             return Result.Error(DataErrors.Local.UNKNOWN_ERROR)
         }
     }
-
 
 
 }

@@ -22,7 +22,7 @@ interface SolusServersDao {
     @Delete
     fun deleteServer(vararg servers: SolusServer)
 
-    @Insert(onConflict = OnConflictStrategy.ABORT )
+    @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun addServer(server: SolusServer)
 
     @Query("SELECT * FROM solusserver WHERE hash=:hash AND `key`=:key AND 'url'=:url")

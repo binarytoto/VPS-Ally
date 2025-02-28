@@ -1,7 +1,5 @@
-package top.cuboid.vpsally.ui
+package top.cuboid.vpsally.presentation.server_list
 
-import android.os.Parcelable
-import androidx.annotation.StringRes
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -12,16 +10,15 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
-import kotlinx.parcelize.Parcelize
 import top.cuboid.vpsally.R
-import top.cuboid.vpsally.data.Server
+import top.cuboid.vpsally.VPSAlly
 import top.cuboid.vpsally.data.SolusRepositoryImpl
 import top.cuboid.vpsally.data.local.SolusServer
-import top.cuboid.vpsally.di.VPSAlly
-import top.cuboid.vpsally.domain.DataErrors
 import top.cuboid.vpsally.domain.Result
+import top.cuboid.vpsally.presentation.models.TextFieldUiState
 
 object SavedStateKeys {
     const val PORT = "port"
@@ -32,7 +29,7 @@ object SavedStateKeys {
     const val PATH = "path"
     const val API_KEY = "api_key"
     const val API_HASH = "api_hash"
-    const val HOME_UI = "home_ui"
+    const val IS_LOADING = "is_loading"
 }
 
 object DefaultValues {
@@ -41,20 +38,6 @@ object DefaultValues {
     const val PORT = "5656"
     const val PATH = "api/client/command.php"
 }
-
-@Parcelize
-data class HomeUiState(
-    val servers: List<Server> = emptyList(),
-    val isLoading: Boolean = false,
-    @StringRes val userMessage: Int? = null
-) : Parcelable
-
-@Parcelize
-data class TextFieldUiState(
-    val text: String,
-    val error: Boolean,
-    @StringRes val resId: Int? = null
-) : Parcelable
 
 class HomeViewModel(
     private val state: SavedStateHandle,
@@ -66,8 +49,8 @@ class HomeViewModel(
     )
         private set
 
-    var uiState by mutableStateOf(
-        state.get<HomeUiState>(SavedStateKeys.HOME_UI) ?: HomeUiState()
+    var isLoading by mutableStateOf(
+        state.get<Boolean>(SavedStateKeys.IS_LOADING) ?: false
     )
 
     fun updateHttpsFlag(useHttps: Boolean) {
@@ -88,6 +71,9 @@ class HomeViewModel(
         )
     )
         private set
+
+    private val _events = Channel<ServerListEvents>()
+    val events = _events.receiveAsFlow()
 
     fun updateSubDomain(input: String) {
         //TODO: regex for identify invalid domian
@@ -129,10 +115,10 @@ class HomeViewModel(
         if (port.isBlank()) {
             isError = true
             error = R.string.empty_error
-        }else if(!port.isDigitsOnly()) {
+        } else if (!port.isDigitsOnly()) {
             isError = true
             error = R.string.only_digits_error
-        } else if (port.toInt() !in 1..65535){
+        } else if (port.toInt() !in 1..65535) {
             isError = true
             error = R.string.invalid_entry_error
         }
@@ -188,10 +174,10 @@ class HomeViewModel(
     fun updateApiKey(input: String) {
         val key = input.trim()
         var isError = false
-        var error:Int? = null
+        var error: Int? = null
         //TODO regex to exclude Whitespaces and -
 
-        if (key.isBlank()){
+        if (key.isBlank()) {
             isError = true
             error = R.string.empty_error
         }
@@ -209,7 +195,7 @@ class HomeViewModel(
             error = false
         )
     )
-    private set
+        private set
 
     fun updateApiHash(input: String) {
         val hash = input.trim()
@@ -220,7 +206,7 @@ class HomeViewModel(
         if (hash.isBlank()) {
             isError = true
             error = R.string.empty_error
-        } else if(hash.contains("")) {
+        } else if (hash.contains("")) {
             isError = true
             error = R.string.invalid_entry_error
         }
@@ -244,13 +230,13 @@ class HomeViewModel(
     fun updateHost(input: String) {
         val host = input.trim()
         var isError = false
-        var error:Int? = null
+        var error: Int? = null
         //Todo add regex to validate domain
 
         if (host.isBlank()) {
             isError = true
             error = R.string.empty_error
-        } else if(host.contains("")) {
+        } else if (host.contains("")) {
             isError = true
             error = R.string.invalid_entry_error
         }
@@ -258,7 +244,7 @@ class HomeViewModel(
         hostUiState = hostUiState.copy(
             text = host,
             error = isError,
-            resId =  error
+            resId = error
         )
     }
 
@@ -282,32 +268,24 @@ class HomeViewModel(
 
     fun saveServer() {
         viewModelScope.launch {
-            val result =  repository.saveServer(SolusServer(
-                requestUrl = pathUiState.text,
-                key = apiKeyUiState.text,
-                hash = apiHashUiState.text
+            val result = repository.saveServer(
+                SolusServer(
+                    requestUrl = pathUiState.text,
+                    key = apiKeyUiState.text,
+                    hash = apiHashUiState.text
 
-            ))
-            println("hey ")
-            uiState = when (result) {
+                )
+            )
+            when (result) {
                 is Result.Error -> {
-
-                    if (result.error == DataErrors.Local.SQL_ERROR) {
-                        uiState.copy(userMessage = R.string.server_save_error)
-                    } else {
-                        uiState.copy(userMessage = R.string.unknown_error)
-                    }
+                    _events.send(ServerListEvents.Error(result.error))
                 }
 
                 is Result.Success -> {
-                    uiState.copy(userMessage = R.string.server_saved)
+                    _events.send(ServerListEvents.Success(UiEvents.SERVER_SAVED))
                 }
             }
         }
-    }
-
-    fun userMessageShown() {
-        uiState = uiState.copy(userMessage = null)
     }
 
     companion object {

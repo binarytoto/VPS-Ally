@@ -22,7 +22,8 @@ class SolusVMServiceImpl(
                     formData {
                         append(SolusRequestConstants.KEY, server.key)
                         append(
-                            SolusRequestConstants.HASH, server.hash)
+                            SolusRequestConstants.HASH, server.hash
+                        )
                         append(SolusRequestConstants.ACTION, action)
                         append(SolusRequestConstants.HDD_FLAG, true)
                         append(SolusRequestConstants.MEMORY_FLAG, true)
