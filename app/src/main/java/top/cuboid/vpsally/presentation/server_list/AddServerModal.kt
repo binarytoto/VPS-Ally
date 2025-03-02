@@ -277,7 +277,7 @@ fun AddServerModalSheet(
 
             TextButton(
                 onClick = {
-                    resetValues
+                    resetValues()
                     scope.launch {
                         sheetState.hide()
                     }.invokeOnCompletion { updateSheetVisibility(false) }
@@ -296,7 +296,7 @@ fun AddServerModalSheet(
                 onClick = {
                     saveServer()
                     //TODO: close only after save is successful
-                    updateSheetVisibility
+                    updateSheetVisibility(false)
                 },
                 modifier = Modifier.padding(
                     dimensionResource(R.dimen.bottom_sheet_content_padding),
@@ -376,7 +376,7 @@ fun AddServerModalSheet(
                         .weight(1f),
                     value = portUiState.text,
                     onValueChange = {
-                        updatePort
+                        updatePort(it)
                     },
                     label = { Text(stringResource(R.string.port)) },
                     isError = portUiState.error,
@@ -402,7 +402,7 @@ fun AddServerModalSheet(
                         .weight(2f),
                     value = pathUiState.text,
                     onValueChange = {
-                        updatePath
+                        updatePath(it)
                     },
                     label = { Text(stringResource(R.string.path)) },
                     singleLine = true,

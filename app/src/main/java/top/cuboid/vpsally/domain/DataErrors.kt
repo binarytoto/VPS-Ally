@@ -19,3 +19,4 @@ sealed interface DataErrors : Error {
     }
 
 }
+

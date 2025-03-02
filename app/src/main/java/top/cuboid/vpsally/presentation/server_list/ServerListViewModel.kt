@@ -3,6 +3,7 @@ package top.cuboid.vpsally.presentation.server_list
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.core.text.isDigitsOnly
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -18,6 +19,8 @@ import top.cuboid.vpsally.VPSAlly
 import top.cuboid.vpsally.data.SolusRepositoryImpl
 import top.cuboid.vpsally.data.local.SolusServer
 import top.cuboid.vpsally.domain.Result
+import top.cuboid.vpsally.domain.SolusServerValidator
+import top.cuboid.vpsally.domain.ValidationErrors
 import top.cuboid.vpsally.presentation.models.TextFieldUiState
 
 object SavedStateKeys {
@@ -63,7 +66,7 @@ class HomeViewModel(
     fun updateSheetVisibility(showSheet: Boolean) {
         state[SavedStateKeys.SHOW_SHEET] = showSheet
     }
-
+    //TODO error strings may not update after users changes language
     var subDomainUiState by mutableStateOf(
         state.get<TextFieldUiState>(SavedStateKeys.SUB_DOMAIN) ?: TextFieldUiState(
             text = DefaultValues.SUBDOMAIN,
@@ -112,15 +115,15 @@ class HomeViewModel(
         var isError = false
         var error: Int? = null
 
-        if (port.isBlank()) {
-            isError = true
-            error = R.string.empty_error
-        } else if (!port.isDigitsOnly()) {
-            isError = true
-            error = R.string.only_digits_error
-        } else if (port.toInt() !in 1..65535) {
-            isError = true
-            error = R.string.invalid_entry_error
+        when (val isValid = SolusServerValidator.isValidPort(port)) {
+            is Result.Error -> {
+                isError = true
+                if (isValid.error == ValidationErrors.SolusValidationErrors.EMPTY_ENTRY)
+                    error = R.string.empty_error
+                else
+                    error = R.string.invalid_entry_error
+            }
+            is Result.Success -> {}
         }
 
         portUiState = portUiState.copy(
@@ -172,14 +175,19 @@ class HomeViewModel(
         private set
 
     fun updateApiKey(input: String) {
-        val key = input.trim()
+        var key = input.trim()
         var isError = false
         var error: Int? = null
-        //TODO regex to exclude Whitespaces and -
 
-        if (key.isBlank()) {
-            isError = true
-            error = R.string.empty_error
+        when (val isValid = SolusServerValidator.isValidApiKey(key)) {
+            is Result.Error -> {
+                isError = true
+                if (isValid.error == ValidationErrors.SolusValidationErrors.EMPTY_ENTRY)
+                    error = R.string.empty_error
+                else
+                    error = R.string.invalid_key_error
+            }
+            is Result.Success -> {}
         }
 
         apiKeyUiState = apiKeyUiState.copy(
@@ -201,14 +209,16 @@ class HomeViewModel(
         val hash = input.trim()
         var isError = false
         var error: Int? = null
-        //TODO regex to exclude Whitespaces and -
 
-        if (hash.isBlank()) {
-            isError = true
-            error = R.string.empty_error
-        } else if (hash.contains("")) {
-            isError = true
-            error = R.string.invalid_entry_error
+        when (val isValid = SolusServerValidator.isValidApiHash(hash)) {
+            is Result.Error -> {
+                isError = true
+                if (isValid.error == ValidationErrors.SolusValidationErrors.EMPTY_ENTRY)
+                    error = R.string.empty_error
+                else
+                    error = R.string.invalid_entry_error
+            }
+            is Result.Success -> {}
         }
 
         apiHashUiState = apiHashUiState.copy(
